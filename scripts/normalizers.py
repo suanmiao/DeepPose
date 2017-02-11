@@ -15,6 +15,18 @@ logger = getLogger(__name__)
 logger.addHandler(NullHandler())
 
 
+JOINT_MAP = {
+    'lsho': 0,  # L_Shoulder
+    'lelb': 1,  # L_Elbow
+    'lwri': 2,  # L_Wrist
+    'rsho': 3,  # R_Shoulder
+    'relb': 4,  # R_Elbow
+    'rwri': 5,  # R_Wrist
+    'lhip': 6,  # L_Hip
+    'rhip': 7,  # R_Hip
+    'head': 8,  # Head
+}
+
 def mkdir_to_save(filename):
     dirname = os.path.dirname(filename)
     if not os.path.isdir(dirname):
@@ -51,7 +63,7 @@ def boundingRect(points):
 
 
 def fix_back_shot(joint):
-    jmap = datasets.JOINT_MAP
+    jmap = JOINT_MAP
     if joint[jmap['lsho']][0] >= joint[jmap['rsho']][0]:
         return joint  # not flip
 
@@ -265,7 +277,7 @@ class FaceBasedPoseNormalizer(object):
 
 
 def calc_cropping_matrix(width, height, center, joint, sigma=1.0):
-    jmap = datasets.JOINT_MAP
+    jmap = JOINT_MAP
     if 'rhip' in jmap and 'lhip' in jmap:
         diam1 = np.sqrt(np.sum((joint[jmap['lsho']] - joint[jmap['rhip']]) ** 2))
         diam2 = np.sqrt(np.sum((joint[jmap['rsho']] - joint[jmap['lhip']]) ** 2))

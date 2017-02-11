@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
+os.chdir('/home/suanmiao/workspace/ml/deeppose-takiyu')
 
 import argparse
 import numpy as np
@@ -9,10 +11,10 @@ import cv2
 import drawing
 
 from chainer import cuda
+from chainer import serializers
 
 import alexnet
 import log_initializer
-import model_io
 import normalizers
 
 # logging
@@ -45,10 +47,10 @@ class PoseDetector(object):
     def __init__(self, detector=None):
         # initialize arguments
         stage = 0
-        GPU = 0
+        self.GPU = 0
 
         cuda.check_cuda_available()
-        logger.info('GPU mode (%d) (stage: %d)', GPU, stage)
+        logger.info('GPU mode (%d) (stage: %d)', self.GPU, stage)
         self.xp = cuda.cupy
 
         if detector is None:
@@ -112,6 +114,33 @@ class PoseDetector(object):
                                                      translate=False)
             return diff_pt
 
+    def create_modifier(self, stage_cnt, joint_idx):
+        if stage_cnt == 0:
+            return "_s%d" % stage_cnt
+        else:
+            return "_s%d_j%d" % (stage_cnt, joint_idx)
+
+
+    def setup_model(self, stage_cnt):
+        if stage_cnt == 0:
+            model = alexnet.Alex(len(JOINT_MAP))
+        else:
+            model = alexnet.Alex(1)
+        return model
+
+    def load_best_model(self, stage_cnt, joint_idx, gpu=False, train=False):
+        modif = self.create_modifier(stage_cnt, joint_idx)
+        filename = "data/best_model%s.npz" % modif
+        logger.info('Load model from %s', filename)
+        if not os.path.exists(filename):
+            raise FileNotFoundError
+        model = self.setup_model(stage_cnt)
+        serializers.load_npz(filename, model)
+        cuda.get_device(self.GPU).use()
+        model.to_gpu()
+        model.train = train
+        return model
+
     def load_img(self, path):
         img = cv2.imread(path)
         if img is None:
@@ -126,7 +155,7 @@ class PoseDetector(object):
             return self.model_cache_map[key]
         self.model_exist_map[key] = True
         try:
-            model = model_io.load_best_model(stage_id, joint_id)
+            model = self.load_best_model(stage_id, joint_id)
             self.model_cache_map[key] = model
         except FileNotFoundError:
             logger.info('Failed to load')
@@ -173,7 +202,6 @@ class PoseDetector(object):
     def draw_detect(self, img, joints):
         drawing.draw_joint(img, joints)
         cv2.imshow("" + str(time.time()), img)
-
 
 pose_detector = PoseDetector()
 

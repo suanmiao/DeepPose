@@ -9,6 +9,18 @@ from logging import getLogger, NullHandler
 logger = getLogger(__name__)
 logger.addHandler(NullHandler())
 
+JOINT_MAP = {
+    'lsho': 0,  # L_Shoulder
+    'lelb': 1,  # L_Elbow
+    'lwri': 2,  # L_Wrist
+    'rsho': 3,  # R_Shoulder
+    'relb': 4,  # R_Elbow
+    'rwri': 5,  # R_Wrist
+    'lhip': 6,  # L_Hip
+    'rhip': 7,  # R_Hip
+    'head': 8,  # Head
+}
+
 # matplotlib
 try:
     import matplotlib
@@ -39,7 +51,7 @@ def draw_circle(img, pt, color, radius=4):
 
 
 def draw_joint(img, joint, thickness=3, color_scale=1):
-    jmap = datasets.JOINT_MAP
+    jmap = JOINT_MAP
     s = color_scale
 
     # draw joint point difference
