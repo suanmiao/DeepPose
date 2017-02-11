@@ -1,5 +1,5 @@
 {
-    "GPU": 0,
+    "GPU": -1,
     "BEST_MODEL": "data/best_model%s.npz",
     "RESUME_MODEL": "data/resume/model%s.npz",
     "RESUME_OPTIMIZER": "data/resume/optimizer%s.npz",
@@ -17,7 +17,7 @@
     "N_NORMALIZER_TRAIN": 1000,
     "BBOX_SIGMA" : 1.5,
     "N_EPOCH": 500,
-    "BATCH_SIZE": 168,
+    "BATCH_SIZE": 16,
     "N_BUFFERING_BATCH": 10,
     "N_VIEW_IMG": 10,
 
@@ -26,5 +26,5 @@
         "cascade/lbpcascade_frontalface.xml"
     ],
 
-    "ASYNC_MODE": "process"
+    "ASYNC_MODE": "thread"
 }
