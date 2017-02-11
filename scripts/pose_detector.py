@@ -10,13 +10,10 @@ import drawing
 
 from chainer import cuda
 
-import datasets
 import alexnet
-from image_servers import imgviewer
 import log_initializer
 import model_io
 import normalizers
-import settings
 
 # logging
 from logging import getLogger, DEBUG, INFO
@@ -24,7 +21,6 @@ from logging import getLogger, DEBUG, INFO
 log_initializer.setFmt()
 log_initializer.setRootLevel(DEBUG)
 logger = getLogger(__name__)
-imgviewer.logger.setLevel(INFO)
 
 # for Python 2.x
 try:
@@ -32,23 +28,35 @@ try:
 except NameError:
     FileNotFoundError = IOError
 
+JOINT_MAP = {
+    'lsho': 0,  # L_Shoulder
+    'lelb': 1,  # L_Elbow
+    'lwri': 2,  # L_Wrist
+    'rsho': 3,  # R_Shoulder
+    'relb': 4,  # R_Elbow
+    'rwri': 5,  # R_Wrist
+    'lhip': 6,  # L_Hip
+    'rhip': 7,  # R_Hip
+    'head': 8,  # Head
+}
+
 
 class PoseDetector(object):
-    def __init__(self):
+    def __init__(self, detector=None):
         # initialize arguments
         stage = 0
         GPU = 0
-        SLEEP_SEC = 0.0
 
         cuda.check_cuda_available()
         logger.info('GPU mode (%d) (stage: %d)', GPU, stage)
         self.xp = cuda.cupy
 
-        # Face Detector
-        self.detector = normalizers.FaceDetector([
-            "cascade/haarcascade_frontalface_alt.xml",
-            "cascade/lbpcascade_frontalface.xml"
-        ])
+        if detector is None:
+            # Face Detector
+            self.detector = normalizers.FaceDetector([
+                "cascade/haarcascade_frontalface_alt.xml",
+                "cascade/lbpcascade_frontalface.xml"
+            ])
         # Pose Normalizer
         self.normalizer = normalizers.FaceBasedPoseNormalizer()
         facial_normalizer_path = "data/facial_normalizer.npy"
@@ -71,7 +79,7 @@ class PoseDetector(object):
         else:
             center = pre_joint[joint_idx]
             mat = normalizers.calc_cropping_matrix(width, height, center, pre_joint,
-                                                   sigma=settings.BBOX_SIGMA)
+                                                   sigma=1.5)
         img = normalizers.transform_img(img, mat, width, height)
 
         # img -> imgs
@@ -135,7 +143,7 @@ class PoseDetector(object):
         results = [pred_joint]
 
         # Subsequent models
-        for joint_idx in six.moves.xrange(len(datasets.JOINT_MAP)):
+        for joint_idx in six.moves.xrange(len(JOINT_MAP)):
             stage_cnt = 0
             while True:
                 stage_cnt += 1
