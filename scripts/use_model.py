@@ -131,6 +131,7 @@ if __name__ == '__main__':
         # Load pose
         logger.info('Load FLIC test %dth image', perm[i])
         raw_img, teacher = flic.test_data.get_data(perm[i])
+        logger.info('get test image with shape %s', str(raw_img.shape))
         # Teacher data is used only for face detection check
 
         # Load first model and use
@@ -170,6 +171,7 @@ if __name__ == '__main__':
             # single -> multi
             imgs = raw_img.reshape((1,) + raw_img.shape)
             joints = result.reshape((1,) + result.shape)
+            logger.info('get joints ' + str(joints))
             # Send to server
             tab_name = "test (stage %d)" % stage_cnt
             data = [show_cnt % N_SHOW, imgs, joints]
